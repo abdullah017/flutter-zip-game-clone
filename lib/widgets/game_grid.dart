@@ -67,6 +67,21 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
     _pathAnimationController.forward(from: 0.0);
     _successAnimationController.reset();
   }
+
+  void undo() {
+    setState(() {
+      _gameState = _gameState.undo();
+    });
+  }
+
+  void redo() {
+    setState(() {
+      _gameState = _gameState.redo();
+    });
+  }
+
+  bool get canUndo => _gameState.canUndo;
+  bool get canRedo => _gameState.canRedo;
   
   @override
   void dispose() {
@@ -183,7 +198,7 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
           currentPath: [point],
           status: GameStatus.playing,
           currentNumber: 2,
-        );
+        ).recordState(); // Record initial state
         _lastPoint = point;
       });
     }
@@ -209,6 +224,7 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
         if (cell.number != null && cell.number! < _gameState.currentNumber) {
           _gameState = _gameState.copyWith(currentNumber: cell.number! + 1);
         }
+        _gameState = _gameState.recordState(); // Record state after backtracking
       });
       _pathAnimationController.forward(from: 0.0);
       return;
@@ -242,7 +258,7 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
           _gameState = _gameState.copyWith(
             currentPath: newPath,
             currentNumber: nextNumber,
-          );
+          ).recordState(); // Record state after valid move
           _lastPoint = currentGridPoint;
         });
       } else {
@@ -263,7 +279,8 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
         _showGameDialog("Success!", "You solved the puzzle!");
       });
     } else {
-      // Do nothing, allow the user to continue drawing
+      // If the game is not won, clear future history for new moves
+      _gameState = _gameState.trimHistory(); // Use the new method
     }
   }
 
