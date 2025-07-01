@@ -1,0 +1,39 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_zip_game/utils/constants.dart';
+import 'widgets/game_ui.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Zip Game',
+      theme: ThemeData(
+        primaryColor: AppColors.primaryColor,
+        scaffoldBackgroundColor: AppColors.backgroundColor, // Use the new background color
+        brightness: Brightness.dark,
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppColors.backgroundColor, // Match app bar with background
+          foregroundColor: AppColors.textColor,
+          elevation: 0,
+          centerTitle: true, // Center app bar title for a cleaner look
+        ),
+        textTheme: TextTheme(
+          bodyMedium: AppTextStyles.body,
+          titleLarge: AppTextStyles.title,
+        ).apply(bodyColor: AppColors.textColor, displayColor: AppColors.textColor), // Ensure all text uses textColor
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        // Add a subtle splash color for taps
+        splashColor: AppColors.accentColor.withOpacity(0.3),
+        highlightColor: Colors.transparent, // Remove default highlight
+      ),
+      debugShowCheckedModeBanner: false,
+      home: const GameUI(),
+    );
+  }
+}
