@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_zip_game/models/level_data.dart';
 import '../models/game_state.dart';
-import '../models/grid_cell.dart';
 import '../models/path_point.dart';
 import '../services/hint_system.dart';
 import '../services/level_generator.dart';
