@@ -72,51 +72,77 @@ class _GameUIState extends State<GameUI> {
                 ),
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8.0, // Horizontal space between buttons
+                runSpacing: 8.0, // Vertical space between rows of buttons
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          _gridKey.currentState?.initializeGame();
-                        },
-                        icon: const Icon(Icons.refresh, size: 24),
-                        label: const Text('New Game'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryColor, // Button background color
-                          foregroundColor: AppColors.textColor, // Button text/icon color
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
-                          elevation: 5, // Add elevation for a modern look
-                        ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _gridKey.currentState?.undo();
+                    },
+                    icon: const Icon(Icons.undo, size: 24),
+                    label: const Text('Undo'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gridBorderColor, // Button background color
+                      foregroundColor: AppColors.textColor, // Button text/icon color
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
+                      textStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
+                      elevation: 5, // Add elevation for a modern look
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          _gridKey.currentState?.showHint();
-                        },
-                        icon: const Icon(Icons.lightbulb_outline, size: 24),
-                        label: const Text('Hint'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accentColor, // Button background color
-                          foregroundColor: AppColors.backgroundColor, // Button text/icon color
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
-                          elevation: 5, // Add elevation for a modern look
-                        ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _gridKey.currentState?.redo();
+                    },
+                    icon: const Icon(Icons.redo, size: 24),
+                    label: const Text('Redo'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gridBorderColor, // Button background color
+                      foregroundColor: AppColors.textColor, // Button text/icon color
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
+                      textStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
+                      elevation: 5, // Add elevation for a modern look
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _gridKey.currentState?.initializeGame();
+                    },
+                    icon: const Icon(Icons.refresh, size: 24),
+                    label: const Text('New Game'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor, // Button background color
+                      foregroundColor: AppColors.textColor, // Button text/icon color
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      textStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
+                      elevation: 5, // Add elevation for a modern look
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _gridKey.currentState?.showHint();
+                    },
+                    icon: const Icon(Icons.lightbulb_outline, size: 24),
+                    label: const Text('Hint'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentColor, // Button background color
+                      foregroundColor: AppColors.backgroundColor, // Button text/icon color
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      textStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
+                      elevation: 5, // Add elevation for a modern look
                     ),
                   ),
                 ],
