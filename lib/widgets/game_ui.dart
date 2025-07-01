@@ -1,7 +1,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_zip_game/utils/constants.dart';
+import 'package:provider/provider.dart'; // Import provider
+import '../models/game_settings.dart'; // Import GameSettings
 import '../services/level_generator.dart';
+import '../screens/settings_screen.dart'; // Import SettingsScreen
 import 'game_grid.dart';
 
 class GameUI extends StatefulWidget {
@@ -16,11 +19,19 @@ class _GameUIState extends State<GameUI> {
 
   @override
   Widget build(BuildContext context) {
+    final gameSettings = Provider.of<GameSettings>(context); // Access game settings
+
     return Scaffold(
       appBar: AppBar(
         title: Text('LinkedIn Zip Clone', style: AppTextStyles.title.copyWith(fontSize: 22)),
-        // backgroundColor: Colors.blue, // Handled by theme
-        // elevation: 0, // Handled by theme
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: AppColors.textColor),
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -62,8 +73,8 @@ class _GameUIState extends State<GameUI> {
                           ),
                           child: GameGrid(
                             key: _gridKey,
-                            gridSize: 5,
-                            difficulty: Difficulty.medium,
+                            gridSize: gameSettings.gridSize, // Use setting
+                            difficulty: gameSettings.difficulty, // Use setting
                           ),
                         ),
                       );
