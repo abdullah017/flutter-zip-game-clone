@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_zip_game/utils/constants.dart';
 import '../models/game_state.dart';
 import '../models/grid_cell.dart';
 import '../models/level_data.dart';
@@ -16,7 +16,8 @@ class GameGrid extends StatefulWidget {
   final int gridSize;
   final Difficulty difficulty;
 
-  const GameGrid({Key? key, required this.gridSize, required this.difficulty}) : super(key: key);
+  const GameGrid({Key? key, required this.gridSize, required this.difficulty})
+    : super(key: key);
 
   @override
   GameGridState createState() => GameGridState();
@@ -30,7 +31,8 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
   late AnimationController _pathAnimationController;
   late AnimationController _successAnimationController;
   late Animation<double> _successAnimation;
-  late AnimationController _gridEnterAnimationController; // New controller for grid entry
+  late AnimationController
+  _gridEnterAnimationController; // New controller for grid entry
   late Animation<double> _gridEnterAnimation; // New animation for grid entry
 
   @override
@@ -48,11 +50,15 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
       parent: _successAnimationController,
       curve: Curves.elasticOut,
     );
-    _gridEnterAnimationController = AnimationController( // Initialize new controller
+    _gridEnterAnimationController = AnimationController(
+      // Initialize new controller
       vsync: this,
-      duration: const Duration(milliseconds: 1500), // Slightly longer duration for more impact
+      duration: const Duration(
+        milliseconds: 1500,
+      ), // Slightly longer duration for more impact
     );
-    _gridEnterAnimation = CurvedAnimation( // Initialize new animation
+    _gridEnterAnimation = CurvedAnimation(
+      // Initialize new animation
       parent: _gridEnterAnimationController,
       curve: Curves.elasticOut, // Changed curve for a more dynamic feel
     );
@@ -60,7 +66,10 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
   }
 
   void initializeGame() {
-    final LevelData level = LevelGenerator.generateLevel(widget.gridSize, widget.difficulty);
+    final LevelData level = LevelGenerator.generateLevel(
+      widget.gridSize,
+      widget.difficulty,
+    );
     _solutionPath = level.solutionPath;
     setState(() {
       _gameState = GameState(
@@ -76,7 +85,9 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
     });
     _pathAnimationController.forward(from: 0.0);
     _successAnimationController.reset();
-    _gridEnterAnimationController.forward(from: 0.0); // Start grid entry animation
+    _gridEnterAnimationController.forward(
+      from: 0.0,
+    ); // Start grid entry animation
   }
 
   void undo() {
@@ -93,7 +104,7 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
 
   bool get canUndo => _gameState.canUndo;
   bool get canRedo => _gameState.canRedo;
-  
+
   @override
   void dispose() {
     _pathAnimationController.dispose();
@@ -125,37 +136,57 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
                           animation: _gridEnterAnimationController,
                           builder: (context, child) {
                             final cellIndex = row * widget.gridSize + col;
-                            final totalCells = widget.gridSize * widget.gridSize;
+                            final totalCells =
+                                widget.gridSize * widget.gridSize;
 
                             // Define the total duration for the staggered effect
-                            const staggerFactor = 0.8; // How much of the total animation duration is used for staggering
-                            final totalStaggerDuration = _gridEnterAnimationController.duration!.inMilliseconds * staggerFactor;
+                            const staggerFactor =
+                                0.8; // How much of the total animation duration is used for staggering
+                            final totalStaggerDuration =
+                                _gridEnterAnimationController
+                                    .duration!
+                                    .inMilliseconds *
+                                staggerFactor;
 
                             // Calculate the start delay for this specific cell
-                            final cellDelay = (cellIndex / totalCells) * totalStaggerDuration;
+                            final cellDelay =
+                                (cellIndex / totalCells) * totalStaggerDuration;
 
                             // Define the duration for each individual cell's animation
                             const cellAnimationDuration = 500; // milliseconds
 
                             // Calculate the normalized start and end times for the Interval
-                            final begin = cellDelay / _gridEnterAnimationController.duration!.inMilliseconds;
-                            final end = (cellDelay + cellAnimationDuration) / _gridEnterAnimationController.duration!.inMilliseconds;
+                            final begin =
+                                cellDelay /
+                                _gridEnterAnimationController
+                                    .duration!
+                                    .inMilliseconds;
+                            final end =
+                                (cellDelay + cellAnimationDuration) /
+                                _gridEnterAnimationController
+                                    .duration!
+                                    .inMilliseconds;
 
                             // Ensure end does not exceed 1.0
                             final clampedEnd = end.clamp(0.0, 1.0);
 
-                            final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-                              CurvedAnimation(
-                                parent: _gridEnterAnimationController,
-                                curve: Interval(
-                                  begin,
-                                  clampedEnd,
-                                  curve: Curves.elasticOut, // Apply elasticOut to each cell's animation
-                                ),
-                              ),
-                            );
+                            final animation =
+                                Tween<double>(begin: 0.0, end: 1.0).animate(
+                                  CurvedAnimation(
+                                    parent: _gridEnterAnimationController,
+                                    curve: Interval(
+                                      begin,
+                                      clampedEnd,
+                                      curve: Curves
+                                          .elasticOut, // Apply elasticOut to each cell's animation
+                                    ),
+                                  ),
+                                );
 
-                            final clampedAnimationValue = animation.value.clamp(0.0, 1.0);
+                            final clampedAnimationValue = animation.value.clamp(
+                              0.0,
+                              1.0,
+                            );
 
                             return Transform.scale(
                               scale: clampedAnimationValue,
@@ -214,20 +245,23 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
   }
 
   bool _isCellHighlighted(GridCell cell) {
-    if (_hintPoint != null && _hintPoint!.row == cell.row && _hintPoint!.col == cell.col) {
+    if (_hintPoint != null &&
+        _hintPoint!.row == cell.row &&
+        _hintPoint!.col == cell.col) {
       return true;
     }
     if (_gameState.status == GameStatus.playing) {
       final nextNumber = _gameState.currentNumber;
       if (cell.number == nextNumber) return true;
     }
-    return _gameState.currentPath.any((p) => p.row == cell.row && p.col == cell.col);
+    return _gameState.currentPath.any(
+      (p) => p.row == cell.row && p.col == cell.col,
+    );
   }
 
   void showHint() {
     final hint = HintSystem.getNextHint(_gameState, _solutionPath);
     if (hint != null) {
-
       setState(() {
         _hintPoint = hint;
       });
@@ -243,18 +277,22 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
 
   void _onPanStart(DragStartDetails details, double cellSize) {
     if (_gameState.status == GameStatus.success) return;
-    setState(() { _hintPoint = null; });
+    setState(() {
+      _hintPoint = null;
+    });
     final point = _pointFromOffset(details.localPosition, cellSize);
     if (point == null) return;
 
     final cell = _gameState.grid[point.row][point.col];
     if (cell.number == 1) {
       setState(() {
-        _gameState = _gameState.copyWith(
-          currentPath: [point],
-          status: GameStatus.playing,
-          currentNumber: 2,
-        ).recordState(); // Record initial state
+        _gameState = _gameState
+            .copyWith(
+              currentPath: [point],
+              status: GameStatus.playing,
+              currentNumber: 2,
+            )
+            .recordState(); // Record initial state
         _lastPoint = point;
       });
     }
@@ -268,11 +306,14 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
 
     // If the user is trying to go back to the previous point (backtracking)
     if (_gameState.currentPath.length > 1 &&
-        currentGridPoint.row == _gameState.currentPath[_gameState.currentPath.length - 2].row &&
-        currentGridPoint.col == _gameState.currentPath[_gameState.currentPath.length - 2].col) {
+        currentGridPoint.row ==
+            _gameState.currentPath[_gameState.currentPath.length - 2].row &&
+        currentGridPoint.col ==
+            _gameState.currentPath[_gameState.currentPath.length - 2].col) {
       setState(() {
         _gameState = _gameState.copyWith(
-          currentPath: List<PathPoint>.from(_gameState.currentPath)..removeLast(),
+          currentPath: List<PathPoint>.from(_gameState.currentPath)
+            ..removeLast(),
         );
         _lastPoint = _gameState.currentPath.last;
         // Update currentNumber if we backtrack over a numbered cell
@@ -280,30 +321,38 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
         if (cell.number != null && cell.number! < _gameState.currentNumber) {
           _gameState = _gameState.copyWith(currentNumber: cell.number! + 1);
         }
-        _gameState = _gameState.recordState(); // Record state after backtracking
+        _gameState = _gameState
+            .recordState(); // Record state after backtracking
       });
       _pathAnimationController.forward(from: 0.0);
       return;
     }
 
     // If the user is trying to move to the same point, do nothing
-    if (currentGridPoint.row == _lastPoint!.row && currentGridPoint.col == _lastPoint!.col) {
+    if (currentGridPoint.row == _lastPoint!.row &&
+        currentGridPoint.col == _lastPoint!.col) {
       return;
     }
 
     // Check if the new point is a valid next step (adjacent and not already in path, unless it's a number)
-    final isAdjacent = (currentGridPoint.row - _lastPoint!.row).abs() +
+    final isAdjacent =
+        (currentGridPoint.row - _lastPoint!.row).abs() +
             (currentGridPoint.col - _lastPoint!.col).abs() ==
         1;
     final isAlreadyInPath = _gameState.currentPath.any(
-        (p) => p.row == currentGridPoint.row && p.col == currentGridPoint.col);
-    final isNumberedCell = _gameState.grid[currentGridPoint.row][currentGridPoint.col].number != null;
+      (p) => p.row == currentGridPoint.row && p.col == currentGridPoint.col,
+    );
+    final isNumberedCell =
+        _gameState.grid[currentGridPoint.row][currentGridPoint.col].number !=
+        null;
 
     if (isAdjacent && (!isAlreadyInPath || isNumberedCell)) {
-      final newPath = List<PathPoint>.from(_gameState.currentPath)..add(currentGridPoint);
+      final newPath = List<PathPoint>.from(_gameState.currentPath)
+        ..add(currentGridPoint);
 
       if (PathValidator.isValidPath(newPath, _gameState.grid)) {
-        final cell = _gameState.grid[currentGridPoint.row][currentGridPoint.col];
+        final cell =
+            _gameState.grid[currentGridPoint.row][currentGridPoint.col];
         int nextNumber = _gameState.currentNumber;
         if (cell.number == nextNumber) {
           HapticFeedback.mediumImpact();
@@ -311,10 +360,9 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
         }
 
         setState(() {
-          _gameState = _gameState.copyWith(
-            currentPath: newPath,
-            currentNumber: nextNumber,
-          ).recordState(); // Record state after valid move
+          _gameState = _gameState
+              .copyWith(currentPath: newPath, currentNumber: nextNumber)
+              .recordState(); // Record state after valid move
           _lastPoint = currentGridPoint;
         });
       } else {
@@ -344,32 +392,137 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
     final row = (offset.dy / cellSize).floor();
     final col = (offset.dx / cellSize).floor();
 
-    if (row >= 0 && row < widget.gridSize && col >= 0 && col < widget.gridSize) {
-      return PathPoint(row: row, col: col, order: _gameState.currentPath.length);
+    if (row >= 0 &&
+        row < widget.gridSize &&
+        col >= 0 &&
+        col < widget.gridSize) {
+      return PathPoint(
+        row: row,
+        col: col,
+        order: _gameState.currentPath.length,
+      );
     }
     return null;
   }
-  
-  void _showGameDialog(String title, String content, [VoidCallback? onContinue]) {
+
+  void _showGameDialog(
+    String title,
+    String content, [
+    VoidCallback? onContinue,
+  ]) {
+    final isSuccess = title == "Success!";
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              if (onContinue != null) {
-                onContinue();
-              } else {
-                initializeGame();
-              }
-            },
-            child: Text(onContinue != null ? "Try Again" : "New Game"),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(20.0),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundColor, // Use game's background color
+            borderRadius: BorderRadius.circular(20.0),
+            border: Border.all(
+              color: isSuccess ? AppColors.successColor : AppColors.errorColor,
+              width: 3,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSuccess ? Icons.check_circle_outline : Icons.cancel_outlined,
+                color: isSuccess
+                    ? AppColors.successColor
+                    : AppColors.errorColor,
+                size: 80,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                title,
+                style: AppTextStyles.title.copyWith(
+                  color: isSuccess
+                      ? AppColors.successColor
+                      : AppColors.errorColor,
+                  fontSize: 28,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                content,
+                style: AppTextStyles.body.copyWith(color: AppColors.textColor),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      if (onContinue != null) {
+                        onContinue();
+                      } else {
+                        initializeGame();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isSuccess
+                          ? AppColors.successColor
+                          : AppColors.errorColor,
+                      foregroundColor: AppColors.backgroundColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 25,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      textStyle: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: Text(onContinue != null ? "Try Again" : "New Game"),
+                  ),
+                  if (isSuccess) // Only show next level button on success
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        // TODO: Implement logic to load next level
+                        initializeGame(); // For now, just start a new game
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        foregroundColor: AppColors.textColor,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 25,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        textStyle: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      child: const Text("Next Level"),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
