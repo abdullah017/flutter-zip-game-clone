@@ -3,18 +3,17 @@ import 'package:flutter_zip_game/models/game_state_notifier.dart';
 import 'package:flutter_zip_game/utils/constants.dart';
 import 'package:provider/provider.dart'; // Import provider
 import '../models/game_settings.dart'; // Import GameSettings
-import '../services/level_generator.dart';
 import '../screens/settings_screen.dart'; // Import SettingsScreen
 import 'game_grid.dart';
 
 class GameUI extends StatefulWidget {
-  const GameUI({Key? key}) : super(key: key);
+  const GameUI({super.key});
 
   @override
-  _GameUIState createState() => _GameUIState();
+  GameUIState createState() => GameUIState();
 }
 
-class _GameUIState extends State<GameUI> {
+class GameUIState extends State<GameUI> {
   @override
   Widget build(BuildContext context) {
     final gameSettings = Provider.of<GameSettings>(
@@ -88,7 +87,7 @@ class _GameUIState extends State<GameUI> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.5),
+                                color: Colors.black.withValues(alpha: 0.5),
                                 blurRadius: adaptiveBlurRadius,
                                 spreadRadius: adaptiveSpreadRadius,
                                 offset: Offset(0, 10),

@@ -6,11 +6,7 @@ import 'package:flutter_zip_game/utils/constants.dart';
 import 'package:provider/provider.dart';
 import '../models/game_state.dart';
 import '../models/grid_cell.dart';
-import '../models/level_data.dart';
-import '../models/path_point.dart';
-import '../services/hint_system.dart';
 import '../services/level_generator.dart';
-import '../services/path_validator.dart';
 
 import 'grid_cell_widget.dart';
 import 'path_painter.dart';
@@ -19,8 +15,7 @@ class GameGrid extends StatefulWidget {
   final int gridSize;
   final Difficulty difficulty;
 
-  const GameGrid({Key? key, required this.gridSize, required this.difficulty})
-    : super(key: key);
+  const GameGrid({super.key, required this.gridSize, required this.difficulty});
 
   @override
   GameGridState createState() => GameGridState();
@@ -31,7 +26,7 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
   late AnimationController _successAnimationController;
   late Animation<double> _successAnimation;
   late AnimationController _gridEnterAnimationController; // New controller for grid entry
-  late Animation<double> _gridEnterAnimation; // New animation for grid entry
+// New animation for grid entry
 
   @override
   void initState() {
@@ -52,10 +47,6 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 1500), // Slightly longer duration for more impact
     );
-    _gridEnterAnimation = CurvedAnimation( // Initialize new animation
-      parent: _gridEnterAnimationController,
-      curve: Curves.elasticOut, // Changed curve for a more dynamic feel
-    );
     _gridEnterAnimationController.forward(from: 0.0); // Start grid entry animation
   }
 
@@ -68,12 +59,6 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
   }
 
   // Helper to get pixel coordinates from grid point
-  Offset _getPixelForPoint(PathPoint point, double cellSize) {
-    return Offset(
-      point.col * cellSize + cellSize / 2,
-      point.row * cellSize + cellSize / 2,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +159,7 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
                           width: cellSize,
                           height: cellSize,
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.4),
+                            color: Colors.green.withValues(alpha: 0.4),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -232,7 +217,7 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -287,7 +272,6 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
                     ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).pop();
-                        // TODO: Implement logic to load next level
                         Provider.of<GameStateNotifier>(context, listen: false).initializeGame(
                           Provider.of<GameSettings>(context, listen: false).gridSize,
                           Provider.of<GameSettings>(context, listen: false).difficulty,

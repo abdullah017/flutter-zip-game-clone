@@ -1,5 +1,7 @@
 
 import 'dart:math';
+import 'package:flutter/foundation.dart';
+
 import '../models/level_data.dart';
 import '../models/grid_cell.dart';
 import '../models/path_point.dart';
@@ -15,7 +17,9 @@ class LevelGenerator {
     // 1. Hamiltonian path oluştur
     final path = _generateHamiltonianPath(gridSize);
     if (path.isEmpty) {
-      print("LevelGenerator: Hamiltonian path generation failed for grid size $gridSize");
+      if (kDebugMode) {
+        print("LevelGenerator: Hamiltonian path generation failed for grid size $gridSize");
+      }
       return LevelData(grid: [], gridSize: gridSize, totalNumbers: 0, solutionPath: []);
     }
 
@@ -117,7 +121,9 @@ class LevelGenerator {
       }
     }
 
-    print("LevelGenerator: Failed to generate Hamiltonian path after $maxAttempts attempts.");
+    if (kDebugMode) {
+      print("LevelGenerator: Failed to generate Hamiltonian path after $maxAttempts attempts.");
+    }
     return []; // Still failed after multiple attempts
   }
 

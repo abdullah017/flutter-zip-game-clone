@@ -28,7 +28,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
         ).apply(bodyColor: AppColors.textColor, displayColor: AppColors.textColor), // Ensure all text uses textColor
         visualDensity: VisualDensity.adaptivePlatformDensity,
         // Add a subtle splash color for taps
-        splashColor: AppColors.accentColor.withOpacity(0.3),
+        splashColor: AppColors.accentColor.withValues(alpha: 0.3),
         highlightColor: Colors.transparent, // Remove default highlight
       ),
       debugShowCheckedModeBanner: false,
