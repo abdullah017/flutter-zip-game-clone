@@ -93,15 +93,12 @@ flutter_zip_game/
 └── README.md                 # Bu dosya
 ```
 
-## Gelecek Geliştirmeler (Öneriler)
+## Ekran Görüntüleri
 
-*   **Daha Fazla Seviye ve Zorluk:** Daha fazla ızgara boyutu ve daha ince ayarlanmış zorluk dereceleri eklemek.
-*   **Seviye İlerlemesi/Kampanya Modu:** Oyuncuların tamamladıkça yeni seviyelerin kilidini açtığı bir kampanya modu.
-*   **Puanlama Sistemi ve Lider Tabloları:** Oyuncuların performansına göre puanlandığı ve küresel/arkadaş lider tabloları.
-*   **Ses Efektleri ve Arka Plan Müziği:** Oyun içi etkileşimlere ve atmosfere uygun sesler eklemek.
-*   **Öğretici (Tutorial) ve İlk Katılım (Onboarding):** Yeni oyuncular için interaktif bir öğretici.
-*   **Özelleştirme Seçenekleri:** Yol rengi, hücre stili veya tema renkleri gibi daha fazla kişiselleştirme seçeneği.
-*   **Gelişmiş Animasyonlar:** Yol çizimi ve numara toplama gibi olaylar için daha akıcı animasyonlar.
+<img src="https://github.com/user-attachments/assets/0132b53c-359a-4bb9-8fcc-80719e61a30c" width="350" alt="accessibility text">
+<img src="https://github.com/user-attachments/assets/c101ca30-1d9d-49af-a58d-03e7d6128040" width="350" alt="accessibility text">
+<img src="https://github.com/user-attachments/assets/00b68f15-a5a3-4a86-b226-192d5a0d8cda" width="350" alt="accessibility text">
+<img src="https://github.com/user-attachments/assets/26c4d1e4-7c48-4208-8193-e1a51cbc3497" width="350" alt="accessibility text">
 
 ## Katkıda Bulunma
 
