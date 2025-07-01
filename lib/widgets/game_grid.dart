@@ -16,7 +16,7 @@ class GameGrid extends StatefulWidget {
   final int gridSize;
   final Difficulty difficulty;
 
-  const GameGrid({Key? key, this.gridSize = 5, this.difficulty = Difficulty.medium}) : super(key: key);
+  const GameGrid({Key? key, required this.gridSize, required this.difficulty}) : super(key: key);
 
   @override
   GameGridState createState() => GameGridState();

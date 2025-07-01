@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_zip_game/utils/constants.dart';
+import 'package:provider/provider.dart'; // Import provider
+import 'models/game_settings.dart'; // Import GameSettings
 import 'widgets/game_ui.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => GameSettings(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
