@@ -30,6 +30,8 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
   late AnimationController _pathAnimationController;
   late AnimationController _successAnimationController;
   late Animation<double> _successAnimation;
+  late AnimationController _gridEnterAnimationController; // New controller for grid entry
+  late Animation<double> _gridEnterAnimation; // New animation for grid entry
 
   @override
   void initState() {
@@ -45,6 +47,14 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
     _successAnimation = CurvedAnimation(
       parent: _successAnimationController,
       curve: Curves.elasticOut,
+    );
+    _gridEnterAnimationController = AnimationController( // Initialize new controller
+      vsync: this,
+      duration: const Duration(milliseconds: 1500), // Slightly longer duration for more impact
+    );
+    _gridEnterAnimation = CurvedAnimation( // Initialize new animation
+      parent: _gridEnterAnimationController,
+      curve: Curves.elasticOut, // Changed curve for a more dynamic feel
     );
     initializeGame();
   }
@@ -66,6 +76,7 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
     });
     _pathAnimationController.forward(from: 0.0);
     _successAnimationController.reset();
+    _gridEnterAnimationController.forward(from: 0.0); // Start grid entry animation
   }
 
   void undo() {
@@ -87,6 +98,7 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
   void dispose() {
     _pathAnimationController.dispose();
     _successAnimationController.dispose();
+    _gridEnterAnimationController.dispose(); // Dispose new controller
     super.dispose();
   }
 
@@ -109,10 +121,54 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
                     return Row(
                       children: List.generate(widget.gridSize, (col) {
                         final cell = _gameState.grid[row][col];
-                        return GridCellWidget(
-                          cell: cell,
-                          size: cellSize,
-                          isHighlighted: _isCellHighlighted(cell),
+                        return AnimatedBuilder(
+                          animation: _gridEnterAnimationController,
+                          builder: (context, child) {
+                            final cellIndex = row * widget.gridSize + col;
+                            final totalCells = widget.gridSize * widget.gridSize;
+
+                            // Define the total duration for the staggered effect
+                            const staggerFactor = 0.8; // How much of the total animation duration is used for staggering
+                            final totalStaggerDuration = _gridEnterAnimationController.duration!.inMilliseconds * staggerFactor;
+
+                            // Calculate the start delay for this specific cell
+                            final cellDelay = (cellIndex / totalCells) * totalStaggerDuration;
+
+                            // Define the duration for each individual cell's animation
+                            const cellAnimationDuration = 500; // milliseconds
+
+                            // Calculate the normalized start and end times for the Interval
+                            final begin = cellDelay / _gridEnterAnimationController.duration!.inMilliseconds;
+                            final end = (cellDelay + cellAnimationDuration) / _gridEnterAnimationController.duration!.inMilliseconds;
+
+                            // Ensure end does not exceed 1.0
+                            final clampedEnd = end.clamp(0.0, 1.0);
+
+                            final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+                              CurvedAnimation(
+                                parent: _gridEnterAnimationController,
+                                curve: Interval(
+                                  begin,
+                                  clampedEnd,
+                                  curve: Curves.elasticOut, // Apply elasticOut to each cell's animation
+                                ),
+                              ),
+                            );
+
+                            final clampedAnimationValue = animation.value.clamp(0.0, 1.0);
+
+                            return Transform.scale(
+                              scale: clampedAnimationValue,
+                              child: Opacity(
+                                opacity: clampedAnimationValue,
+                                child: GridCellWidget(
+                                  cell: cell,
+                                  size: cellSize,
+                                  isHighlighted: _isCellHighlighted(cell),
+                                ),
+                              ),
+                            );
+                          },
                         );
                       }),
                     );
