@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_zip_game/models/game_settings.dart';
+import 'package:flutter_zip_game/models/game_state_notifier.dart';
 import 'package:flutter_zip_game/utils/constants.dart';
+import 'package:provider/provider.dart';
 import '../models/game_state.dart';
 import '../models/grid_cell.dart';
 import '../models/level_data.dart';
@@ -24,15 +27,10 @@ class GameGrid extends StatefulWidget {
 }
 
 class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
-  late GameState _gameState;
-  late List<PathPoint> _solutionPath;
-  PathPoint? _lastPoint;
-  PathPoint? _hintPoint;
   late AnimationController _pathAnimationController;
   late AnimationController _successAnimationController;
   late Animation<double> _successAnimation;
-  late AnimationController
-  _gridEnterAnimationController; // New controller for grid entry
+  late AnimationController _gridEnterAnimationController; // New controller for grid entry
   late Animation<double> _gridEnterAnimation; // New animation for grid entry
 
   @override
@@ -50,60 +48,16 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
       parent: _successAnimationController,
       curve: Curves.elasticOut,
     );
-    _gridEnterAnimationController = AnimationController(
-      // Initialize new controller
+    _gridEnterAnimationController = AnimationController( // Initialize new controller
       vsync: this,
-      duration: const Duration(
-        milliseconds: 1500,
-      ), // Slightly longer duration for more impact
+      duration: const Duration(milliseconds: 1500), // Slightly longer duration for more impact
     );
-    _gridEnterAnimation = CurvedAnimation(
-      // Initialize new animation
+    _gridEnterAnimation = CurvedAnimation( // Initialize new animation
       parent: _gridEnterAnimationController,
       curve: Curves.elasticOut, // Changed curve for a more dynamic feel
     );
-    initializeGame();
+    _gridEnterAnimationController.forward(from: 0.0); // Start grid entry animation
   }
-
-  void initializeGame() {
-    final LevelData level = LevelGenerator.generateLevel(
-      widget.gridSize,
-      widget.difficulty,
-    );
-    _solutionPath = level.solutionPath;
-    setState(() {
-      _gameState = GameState(
-        grid: level.grid,
-        currentPath: [],
-        currentNumber: 1,
-        isComplete: false,
-        gridSize: widget.gridSize,
-        totalNumbers: level.totalNumbers,
-        status: GameStatus.notStarted,
-      );
-      _hintPoint = null;
-    });
-    _pathAnimationController.forward(from: 0.0);
-    _successAnimationController.reset();
-    _gridEnterAnimationController.forward(
-      from: 0.0,
-    ); // Start grid entry animation
-  }
-
-  void undo() {
-    setState(() {
-      _gameState = _gameState.undo();
-    });
-  }
-
-  void redo() {
-    setState(() {
-      _gameState = _gameState.redo();
-    });
-  }
-
-  bool get canUndo => _gameState.canUndo;
-  bool get canRedo => _gameState.canRedo;
 
   @override
   void dispose() {
@@ -113,311 +67,158 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  // Helper to get pixel coordinates from grid point
+  Offset _getPixelForPoint(PathPoint point, double cellSize) {
+    return Offset(
+      point.col * cellSize + cellSize / 2,
+      point.row * cellSize + cellSize / 2,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double cellSize = constraints.maxWidth / widget.gridSize;
+    return Consumer<GameStateNotifier>(
+      builder: (context, gameStateNotifier, child) {
+        final gameState = gameStateNotifier.gameState;
+        
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final double cellSize = constraints.maxWidth / gameState.gridSize; // Use constraints.maxWidth
 
-        return GestureDetector(
-          onPanStart: (details) => _onPanStart(details, cellSize),
-          onPanUpdate: (details) => _onPanUpdate(details, cellSize),
-          onPanEnd: (details) => _onPanEnd(details),
-          child: AspectRatio(
-            aspectRatio: 1.0,
-            child: Stack(
-              children: [
-                Column(
-                  children: List.generate(widget.gridSize, (row) {
-                    return Row(
-                      children: List.generate(widget.gridSize, (col) {
-                        final cell = _gameState.grid[row][col];
-                        return AnimatedBuilder(
-                          animation: _gridEnterAnimationController,
-                          builder: (context, child) {
-                            final cellIndex = row * widget.gridSize + col;
-                            final totalCells =
-                                widget.gridSize * widget.gridSize;
+            return GestureDetector(
+              onPanStart: (details) => gameStateNotifier.onPanStart(details.localPosition, cellSize),
+              onPanUpdate: (details) => gameStateNotifier.onPanUpdate(details.localPosition, cellSize),
+              onPanEnd: (details) {
+                final status = gameStateNotifier.onPanEnd();
+                if (status == GameStatus.success) {
+                  HapticFeedback.heavyImpact();
+                  _successAnimationController.forward().whenComplete(() {
+                    _showGameDialog("Success!", "You solved the puzzle!");
+                  });
+                }
+              },
+              child: AspectRatio(
+                aspectRatio: 1.0,
+                child: Stack(
+                  children: [
+                    Column(
+                      children: List.generate(gameState.gridSize, (row) { // Use gameState.gridSize
+                        return Row(
+                          children: List.generate(gameState.gridSize, (col) { // Use gameState.gridSize
+                            final cell = gameState.grid[row][col]; // Use gameState.grid
+                            return AnimatedBuilder(
+                              animation: _gridEnterAnimationController,
+                              builder: (context, child) {
+                                final cellIndex = row * gameState.gridSize + col; // Use gameState.gridSize
+                                final totalCells = gameState.gridSize * gameState.gridSize; // Use gameState.gridSize
 
-                            // Define the total duration for the staggered effect
-                            const staggerFactor =
-                                0.8; // How much of the total animation duration is used for staggering
-                            final totalStaggerDuration =
-                                _gridEnterAnimationController
-                                    .duration!
-                                    .inMilliseconds *
-                                staggerFactor;
+                                // Define the total duration for the staggered effect
+                                const staggerFactor = 0.8; // How much of the total animation duration is used for staggering
+                                final totalStaggerDuration = _gridEnterAnimationController.duration!.inMilliseconds * staggerFactor;
 
-                            // Calculate the start delay for this specific cell
-                            final cellDelay =
-                                (cellIndex / totalCells) * totalStaggerDuration;
+                                // Calculate the start delay for this specific cell
+                                final cellDelay = (cellIndex / totalCells) * totalStaggerDuration;
 
-                            // Define the duration for each individual cell's animation
-                            const cellAnimationDuration = 500; // milliseconds
+                                // Define the duration for each individual cell's animation
+                                const cellAnimationDuration = 500; // milliseconds
 
-                            // Calculate the normalized start and end times for the Interval
-                            final begin =
-                                cellDelay /
-                                _gridEnterAnimationController
-                                    .duration!
-                                    .inMilliseconds;
-                            final end =
-                                (cellDelay + cellAnimationDuration) /
-                                _gridEnterAnimationController
-                                    .duration!
-                                    .inMilliseconds;
+                                // Calculate the normalized start and end times for the Interval
+                                final begin = cellDelay / _gridEnterAnimationController.duration!.inMilliseconds;
+                                final end = (cellDelay + cellAnimationDuration) / _gridEnterAnimationController.duration!.inMilliseconds;
 
-                            // Ensure end does not exceed 1.0
-                            final clampedEnd = end.clamp(0.0, 1.0);
+                                // Ensure end does not exceed 1.0
+                                final clampedEnd = end.clamp(0.0, 1.0);
 
-                            final animation =
-                                Tween<double>(begin: 0.0, end: 1.0).animate(
+                                final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
                                   CurvedAnimation(
                                     parent: _gridEnterAnimationController,
                                     curve: Interval(
                                       begin,
                                       clampedEnd,
-                                      curve: Curves
-                                          .elasticOut, // Apply elasticOut to each cell's animation
+                                      curve: Curves.elasticOut, // Apply elasticOut to each cell's animation
                                     ),
                                   ),
                                 );
 
-                            final clampedAnimationValue = animation.value.clamp(
-                              0.0,
-                              1.0,
-                            );
+                                final clampedAnimationValue = animation.value.clamp(0.0, 1.0);
 
-                            return Transform.scale(
-                              scale: clampedAnimationValue,
-                              child: Opacity(
-                                opacity: clampedAnimationValue,
-                                child: GridCellWidget(
-                                  cell: cell,
-                                  size: cellSize,
-                                  isHighlighted: _isCellHighlighted(cell),
-                                ),
-                              ),
+                                return Transform.scale(
+                                  scale: clampedAnimationValue,
+                                  child: Opacity(
+                                    opacity: clampedAnimationValue,
+                                    child: GridCellWidget(
+                                      cell: cell,
+                                      size: cellSize,
+                                      isHighlighted: _isCellHighlighted(cell, gameStateNotifier), // Pass notifier
+                                    ),
+                                  ),
+                                );
+                              },
                             );
-                          },
+                          }),
                         );
                       }),
-                    );
-                  }),
-                ),
-                CustomPaint(
-                  size: Size.infinite,
-                  painter: PathPainter(
-                    path: _gameState.currentPath,
-                    cellSize: cellSize,
-                  ),
-                ),
-                if (_hintPoint != null)
-                  Positioned(
-                    left: _hintPoint!.col * cellSize,
-                    top: _hintPoint!.row * cellSize,
-                    child: Container(
-                      width: cellSize,
-                      height: cellSize,
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.4),
-                        shape: BoxShape.circle,
+                    ),
+                    CustomPaint(
+                      size: Size.infinite,
+                      painter: PathPainter(
+                        path: gameState.currentPath, // Use gameState.currentPath
+                        cellSize: cellSize,
                       ),
                     ),
-                  ),
-                if (_successAnimationController.isAnimating)
-                  Center(
-                    child: ScaleTransition(
-                      scale: _successAnimation,
-                      child: Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: constraints.maxWidth * 0.5,
+                    if (gameStateNotifier.hintPoint != null) // Use notifier's hintPoint
+                      Positioned(
+                        left: gameStateNotifier.hintPoint!.col * cellSize,
+                        top: gameStateNotifier.hintPoint!.row * cellSize,
+                        child: Container(
+                          width: cellSize,
+                          height: cellSize,
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.4),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+                    if (_successAnimationController.isAnimating)
+                      Center(
+                        child: ScaleTransition(
+                          scale: _successAnimation,
+                          child: Icon(
+                            Icons.star,
+                            color: Colors.amber,
+                            size: constraints.maxWidth * 0.5,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  bool _isCellHighlighted(GridCell cell) {
-    if (_hintPoint != null &&
-        _hintPoint!.row == cell.row &&
-        _hintPoint!.col == cell.col) {
+  bool _isCellHighlighted(GridCell cell, GameStateNotifier gameStateNotifier) {
+    final gameState = gameStateNotifier.gameState;
+    if (gameStateNotifier.hintPoint != null && gameStateNotifier.hintPoint!.row == cell.row && gameStateNotifier.hintPoint!.col == cell.col) {
       return true;
     }
-    if (_gameState.status == GameStatus.playing) {
-      final nextNumber = _gameState.currentNumber;
+    if (gameState.status == GameStatus.playing) {
+      final nextNumber = gameState.currentNumber;
       if (cell.number == nextNumber) return true;
     }
-    return _gameState.currentPath.any(
-      (p) => p.row == cell.row && p.col == cell.col,
-    );
+    return gameState.currentPath.any((p) => p.row == cell.row && p.col == cell.col);
   }
 
-  void showHint() {
-    final hint = HintSystem.getNextHint(_gameState, _solutionPath);
-    if (hint != null) {
-      setState(() {
-        _hintPoint = hint;
-      });
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() {
-            _hintPoint = null;
-          });
-        }
-      });
-    }
-  }
-
-  void _onPanStart(DragStartDetails details, double cellSize) {
-    if (_gameState.status == GameStatus.success) return;
-    setState(() {
-      _hintPoint = null;
-    });
-    final point = _pointFromOffset(details.localPosition, cellSize);
-    if (point == null) return;
-
-    final cell = _gameState.grid[point.row][point.col];
-    if (cell.number == 1) {
-      setState(() {
-        _gameState = _gameState
-            .copyWith(
-              currentPath: [point],
-              status: GameStatus.playing,
-              currentNumber: 2,
-            )
-            .recordState(); // Record initial state
-        _lastPoint = point;
-      });
-    }
-  }
-
-  void _onPanUpdate(DragUpdateDetails details, double cellSize) {
-    if (_gameState.status != GameStatus.playing) return;
-
-    final currentGridPoint = _pointFromOffset(details.localPosition, cellSize);
-    if (currentGridPoint == null) return;
-
-    // If the user is trying to go back to the previous point (backtracking)
-    if (_gameState.currentPath.length > 1 &&
-        currentGridPoint.row ==
-            _gameState.currentPath[_gameState.currentPath.length - 2].row &&
-        currentGridPoint.col ==
-            _gameState.currentPath[_gameState.currentPath.length - 2].col) {
-      setState(() {
-        _gameState = _gameState.copyWith(
-          currentPath: List<PathPoint>.from(_gameState.currentPath)
-            ..removeLast(),
-        );
-        _lastPoint = _gameState.currentPath.last;
-        // Update currentNumber if we backtrack over a numbered cell
-        final cell = _gameState.grid[_lastPoint!.row][_lastPoint!.col];
-        if (cell.number != null && cell.number! < _gameState.currentNumber) {
-          _gameState = _gameState.copyWith(currentNumber: cell.number! + 1);
-        }
-        _gameState = _gameState
-            .recordState(); // Record state after backtracking
-      });
-      _pathAnimationController.forward(from: 0.0);
-      return;
-    }
-
-    // If the user is trying to move to the same point, do nothing
-    if (currentGridPoint.row == _lastPoint!.row &&
-        currentGridPoint.col == _lastPoint!.col) {
-      return;
-    }
-
-    // Check if the new point is a valid next step (adjacent and not already in path, unless it's a number)
-    final isAdjacent =
-        (currentGridPoint.row - _lastPoint!.row).abs() +
-            (currentGridPoint.col - _lastPoint!.col).abs() ==
-        1;
-    final isAlreadyInPath = _gameState.currentPath.any(
-      (p) => p.row == currentGridPoint.row && p.col == currentGridPoint.col,
-    );
-    final isNumberedCell =
-        _gameState.grid[currentGridPoint.row][currentGridPoint.col].number !=
-        null;
-
-    if (isAdjacent && (!isAlreadyInPath || isNumberedCell)) {
-      final newPath = List<PathPoint>.from(_gameState.currentPath)
-        ..add(currentGridPoint);
-
-      if (PathValidator.isValidPath(newPath, _gameState.grid)) {
-        final cell =
-            _gameState.grid[currentGridPoint.row][currentGridPoint.col];
-        int nextNumber = _gameState.currentNumber;
-        if (cell.number == nextNumber) {
-          HapticFeedback.mediumImpact();
-          nextNumber++;
-        }
-
-        setState(() {
-          _gameState = _gameState
-              .copyWith(currentPath: newPath, currentNumber: nextNumber)
-              .recordState(); // Record state after valid move
-          _lastPoint = currentGridPoint;
-        });
-      } else {
-        HapticFeedback.lightImpact();
-      }
-    }
-  }
-
-  void _onPanEnd(DragEndDetails details) {
-    if (_gameState.status != GameStatus.playing) return;
-
-    if (PathValidator.checkWinCondition(_gameState)) {
-      HapticFeedback.heavyImpact();
-      setState(() {
-        _gameState = _gameState.copyWith(status: GameStatus.success);
-      });
-      _successAnimationController.forward().whenComplete(() {
-        _showGameDialog("Success!", "You solved the puzzle!");
-      });
-    } else {
-      // If the game is not won, clear future history for new moves
-      _gameState = _gameState.trimHistory(); // Use the new method
-    }
-  }
-
-  PathPoint? _pointFromOffset(Offset offset, double cellSize) {
-    final row = (offset.dy / cellSize).floor();
-    final col = (offset.dx / cellSize).floor();
-
-    if (row >= 0 &&
-        row < widget.gridSize &&
-        col >= 0 &&
-        col < widget.gridSize) {
-      return PathPoint(
-        row: row,
-        col: col,
-        order: _gameState.currentPath.length,
-      );
-    }
-    return null;
-  }
-
-  void _showGameDialog(
-    String title,
-    String content, [
-    VoidCallback? onContinue,
-  ]) {
+  void _showGameDialog(String title, String content) {
     final isSuccess = title == "Success!";
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
         elevation: 0,
         backgroundColor: Colors.transparent,
         child: Container(
@@ -442,18 +243,14 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
             children: [
               Icon(
                 isSuccess ? Icons.check_circle_outline : Icons.cancel_outlined,
-                color: isSuccess
-                    ? AppColors.successColor
-                    : AppColors.errorColor,
+                color: isSuccess ? AppColors.successColor : AppColors.errorColor,
                 size: 80,
               ),
               const SizedBox(height: 20),
               Text(
                 title,
                 style: AppTextStyles.title.copyWith(
-                  color: isSuccess
-                      ? AppColors.successColor
-                      : AppColors.errorColor,
+                  color: isSuccess ? AppColors.successColor : AppColors.errorColor,
                   fontSize: 28,
                 ),
                 textAlign: TextAlign.center,
@@ -471,50 +268,37 @@ class GameGridState extends State<GameGrid> with TickerProviderStateMixin {
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      if (onContinue != null) {
-                        onContinue();
-                      } else {
-                        initializeGame();
-                      }
+                      // Reinitialize game using GameStateNotifier
+                      Provider.of<GameStateNotifier>(context, listen: false).initializeGame(
+                        Provider.of<GameSettings>(context, listen: false).gridSize,
+                        Provider.of<GameSettings>(context, listen: false).difficulty,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isSuccess
-                          ? AppColors.successColor
-                          : AppColors.errorColor,
+                      backgroundColor: isSuccess ? AppColors.successColor : AppColors.errorColor,
                       foregroundColor: AppColors.backgroundColor,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 25,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      textStyle: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      textStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    child: Text(onContinue != null ? "Try Again" : "New Game"),
+                    child: Text(isSuccess ? "New Game" : "Try Again"),
                   ),
                   if (isSuccess) // Only show next level button on success
                     ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).pop();
                         // TODO: Implement logic to load next level
-                        initializeGame(); // For now, just start a new game
+                        Provider.of<GameStateNotifier>(context, listen: false).initializeGame(
+                          Provider.of<GameSettings>(context, listen: false).gridSize,
+                          Provider.of<GameSettings>(context, listen: false).difficulty,
+                        ); // For now, just start a new game
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryColor,
                         foregroundColor: AppColors.textColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 25,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        textStyle: AppTextStyles.body.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        textStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
                       ),
                       child: const Text("Next Level"),
                     ),

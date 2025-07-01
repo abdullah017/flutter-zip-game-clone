@@ -2,12 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_zip_game/utils/constants.dart';
 import 'package:provider/provider.dart'; // Import provider
 import 'models/game_settings.dart'; // Import GameSettings
+import 'models/game_state_notifier.dart'; // Import GameStateNotifier
 import 'widgets/game_ui.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => GameSettings(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => GameSettings()),
+        ChangeNotifierProxyProvider<GameSettings, GameStateNotifier>(
+          create: (context) => GameStateNotifier(
+            gridSize: Provider.of<GameSettings>(context, listen: false).gridSize,
+            difficulty: Provider.of<GameSettings>(context, listen: false).difficulty,
+          ),
+          update: (context, gameSettings, gameStateNotifier) {
+            // Reinitialize game when settings change
+            gameStateNotifier!.initializeGame(gameSettings.gridSize, gameSettings.difficulty);
+            return gameStateNotifier;
+          },
+        ),
+      ],
       child: const MyApp(),
     ),
   );
